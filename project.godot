@@ -21,7 +21,7 @@ JS="*res://addons/yandex_games/JS.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/yandex_games/plugin.cfg")
+enabled=PackedStringArray("res://addons/builder/plugin.cfg", "res://addons/yandex_games/plugin.cfg")
 
 [rendering]
 

@@ -1,0 +1,170 @@
+[gd_scene load_steps=3 format=3 uid="uid://barswm8g773e1"]
+
+[ext_resource type="Script" uid="uid://bodutdf8drmhj" path="res://addons/builder/export_settings_dialog.gd" id="1"]
+[ext_resource type="StyleBox" uid="uid://dfwsp316jde50" path="res://addons/builder/ui/panel.stylebox" id="2_nngbh"]
+
+[node name="Builder" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+script = ExtResource("1")
+
+[node name="FileDialog" type="FileDialog" parent="."]
+mode = 2
+title = "Open a Directory"
+file_mode = 2
+access = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="HeaderContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="InfoRow" type="HBoxContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="VBoxContainer/MarginContainer/HeaderContainer/InfoRow"]
+layout_mode = 2
+text = "Add path to Godot Source"
+
+[node name="ButtonRow" type="HBoxContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="BuildTemplate" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+disabled = true
+text = "Build template"
+
+[node name="CopyCommands" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+disabled = true
+text = "Copy all commands"
+
+[node name="CopyPath" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Copy export template path"
+
+[node name="SconsClean" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+disabled = true
+text = "Clean Scons"
+
+[node name="ResetToDefaultButton" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+disabled = true
+text = "Reset to default"
+
+[node name="AllReset" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 6
+disabled = true
+text = "All reset"
+
+[node name="SourcePathRow" type="PanelContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_nngbh")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "--directory"
+horizontal_alignment = 1
+
+[node name="Center" type="Control" parent="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Value" type="LineEdit" parent="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+editable = false
+
+[node name="Button" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer"]
+layout_mode = 2
+text = "..."
+
+[node name="PlatformRoww" type="PanelContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_nngbh")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "platform"
+horizontal_alignment = 1
+
+[node name="Center" type="Control" parent="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Option" type="OptionButton" parent="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RowContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer2/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="PopupPanel" type="PopupPanel" parent="."]
+oversampling_override = 1.0
+size = Vector2i(198, 100)
+
+[node name="Label" type="Label" parent="PopupPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 194.0
+offset_bottom = 96.0
+text = "Path to template copied!"
+
+[connection signal="dir_selected" from="FileDialog" to="." method="_on_file_dialog_dir_selected"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer/Button" to="." method="_on_path_button_pressed" binds= ["VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow"]]
