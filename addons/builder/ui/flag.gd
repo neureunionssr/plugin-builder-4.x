@@ -22,14 +22,14 @@ func _on_Reset_pressed() -> void:
 	changed = false
 	check_box.button_pressed = default == "yes"
 	reset.visible = false
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , null)
 
 
 func _on_CheckBox_toggled(button_pressed: bool) -> void:
 	value = "yes" if button_pressed else "no"
 	changed = default != value
 	reset.visible = changed
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , value if changed else null)
 
 
 func get_parameter() -> String:

@@ -168,3 +168,4 @@ text = "Path to template copied!"
 
 [connection signal="dir_selected" from="FileDialog" to="." method="_on_file_dialog_dir_selected"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer/Button" to="." method="_on_path_button_pressed" binds= ["VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow"]]
+[connection signal="item_selected" from="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer/Option" to="." method="_platform_selected"]

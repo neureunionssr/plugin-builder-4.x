@@ -2,14 +2,12 @@
 extends MarginContainer
 class_name ExportSettingsDialog
 
-const DEFAULT_CONFIG_PATH = "res://addons/builder/configs/default_config.cfg"
-const CURRENT_CONFIG_PATH = "res://addons/builder/configs/current_config.cfg"
 const SETTINGS_CONFIG_PATH = "res://addons/builder/configs/settings_config.cfg"
 
-var default_config:ConfigFile
-var current_config:ConfigFile
+
 var settings_config:ConfigFile
 var source_path:String = ""
+var platforms:Array[String]
 
 @onready var header_container: VBoxContainer = $VBoxContainer/MarginContainer/HeaderContainer
 @onready var row_container: VBoxContainer = $VBoxContainer/MarginContainer2/ScrollContainer/RowContainer
@@ -39,15 +37,9 @@ var current_path_row:NodePath
 #signal list_changed(key, value)
 #
 func _init():
-	default_config = ConfigFile.new()
-	current_config = ConfigFile.new()
 	settings_config = ConfigFile.new()
 	if settings_config.load(SETTINGS_CONFIG_PATH) != OK: 
 		settings_config.save(SETTINGS_CONFIG_PATH)
-	if default_config.load(DEFAULT_CONFIG_PATH) != OK: 
-		default_config.save(DEFAULT_CONFIG_PATH)
-	if current_config.load(CURRENT_CONFIG_PATH) != OK: 
-		current_config.save(CURRENT_CONFIG_PATH)
 
 
 func start_dialog() -> void:
@@ -57,21 +49,33 @@ func start_dialog() -> void:
 	source_path = settings_config.get_value("settings", "path")
 	if source_path == "": return
 	copy_path_button.disabled = false
+	if settings_config.has_section_key("settings", "platforms"): 
+		platforms = settings_config.get_value("settings", "platforms")
 	path_value.text = source_path
-	var platforms = get_platforms(source_path)
+	print(platforms)
+	if platforms.size() == 0: 
+		platforms = get_platforms(source_path)
+		if platforms.size() == 0: return
+		else: 
+			print("tested platforms: ", platforms)
+			settings_config.set_value("settings", "platforms", platforms)
+			settings_config.set_value("parameters", "platform", platforms[0])
+			settings_config.save(SETTINGS_CONFIG_PATH)
 	if platforms.size() == 0: return
-	#add_row_to_container({"type":"list", "name":"platform", }, header_container)
-	#print("platform: ", platforms[0])
-	var attributes := get_scons_attribute_list(platforms[0])
+	if !settings_config.has_section_key("parameters", "platform"):
+		settings_config.set_value("parameters", "platform", platforms[0])
+		settings_config.save(SETTINGS_CONFIG_PATH)
+	var attributes := get_scons_attribute_list(settings_config.get_value("parameters", "platform"))
 	#print("attributes: ", attributes)
 	var parsed_array := parsing_help(attributes)
 	#print("parsed_array: ", parsed_array)
 	if parsed_array.size() > 0:
 		add_rows_to_ui(parsed_array)
-	#if platforms.size() != 0:
-		#for p in platforms:
-			#$ScrollContainer/PanelContainer/VBoxContainer2/HeaderContainer/PlatformRow/Option.add_item(p)
-		#$ScrollContainer/PanelContainer/VBoxContainer2/HeaderContainer/PlatformRow/Option.disabled = false
+	if platforms.size() != 0:
+		for p in platforms:
+			platform_option.add_item(p)
+		platform_option.disabled = false
+	
 	#if config.has_section("Parameters"):
 			#for key in config.get_section_keys("Parameters"):
 				#print("key")
@@ -139,7 +143,7 @@ func _on_file_dialog_dir_selected(dir: String) -> void:
 				platform_option.add_item(p)
 			platform_option.disabled = false
 			#copy_path_button.disabled = false
-			settings_config.set_value("settings", "platform", platform_option.get_item_text(platform_option.get_selected_id()))
+			settings_config.set_value("parameters", "platform", platform_option.get_item_text(platform_option.get_selected_id()))
 			settings_config.save(SETTINGS_CONFIG_PATH)
 			print("target: ", platform_option.get_item_text(platform_option.get_selected_id()))
 			var attributes := get_scons_attribute_list(platform_option.get_item_text(platform_option.get_selected_id()))
@@ -155,23 +159,23 @@ func _on_file_dialog_dir_selected(dir: String) -> void:
 func remove_rows_from_ui() -> void:
 	for row in row_container.get_children():
 		if row is BuildRow:
-			if is_connected("changed", row_changed): row.disconnect("changed", row_changed)
+			if is_connected("_changed", row_changed): row.disconnect("_changed", row_changed)
 		row_container.remove_child(row)
 		row.queue_free()
 
 
-func row_changed(row_name:String, value:bool)->void:
+func row_changed(row_name:String, value)->void:
 	if !value: 
 		print("returned to default")
-		#if config.load(CONFIG_PATH) != OK: return
-		#if config.has_section_key("Parameters", row_name):
-			#config.erase_section_key("Parameters", row_name)
-			#config.save(CONFIG_PATH)
+		if settings_config.load(SETTINGS_CONFIG_PATH) != OK: return
+		if settings_config.has_section_key("parameters", row_name):
+			settings_config.erase_section_key("parameters", row_name)
+			settings_config.save(SETTINGS_CONFIG_PATH)
 	else:
 		print("new value")
-		#if config.load(CONFIG_PATH) != OK: return
-		#config.set_value("Parameters", row_name, value)
-		#config.save(CONFIG_PATH)
+		if settings_config.load(SETTINGS_CONFIG_PATH) != OK: return
+		settings_config.set_value("parameters", row_name, value)
+		settings_config.save(SETTINGS_CONFIG_PATH)
 
 
 func clean_option(opt:OptionButton) -> void:
@@ -181,7 +185,7 @@ func clean_option(opt:OptionButton) -> void:
 
 
 func add_row_to_container(row:Dictionary, container:Control) -> void:
-	var res:Container
+	var res:BuildRow
 	match row.type:
 		"field":
 			res = field_scene.instantiate()
@@ -210,32 +214,31 @@ func add_row_to_container(row:Dictionary, container:Control) -> void:
 			res.button.pressed.connect(_on_path_button_pressed.bind([res.get_path()]))
 			return
 	container.add_child(res)
-	res.connect("changed", row_changed)
+	res.connect("_changed", row_changed)
 
 
 func parsing_help(output:Array) -> Array:
 	var result:Array
+	var succes:bool = false
 	for row in output:
 		if row.begins_with("scons: done reading SConscript files."):
-			return []
+			succes = true
+			break
+	if !succes: return []
 	var started:bool = false
 	var line:String
-	#print("output: ", output)
 	while output.size() > 0:
 		line = output.pop_front().strip_edges()
-		#print("line: ", line)
 		if line.begins_with("platform:") and !started:
 			started = true
 			line = output.pop_front().strip_edges()
 			while line.length() > 1:
 				line = output.pop_front()
-				print(line.length(), " ", line)
 			continue
 		if started:
 			if line.begins_with("Use scons -H"): return result
 			var row:Dictionary
 			var default:String
-			#line = output.pop_front().strip_edges()
 			row.name = line.substr(0, line.find(":"))
 			row.description = line.substr(line.find(":") + 1, line.find("(") - line.find(":") - 1).strip_edges()
 			var spliter:String = "|" if line.find("|") > -1 else "/"
@@ -243,11 +246,10 @@ func parsing_help(output:Array) -> Array:
 			if line.find("(") > -1: pool = line.substr(line.rfind("(") + 1, line.rfind(")") - line.rfind("(") - 1).split(spliter)
 			while line.length() > 1:
 				line = output.pop_front().strip_edges()
-				#print(line)
 				if line.begins_with("actual:"):
 					default = line.substr(line.find(":") + 1).strip_edges()
 					if default == "None": default = ""
-			print("row: ", row, " pool: ", pool, " ", line, " ", line.rfind(")") - line.rfind(")") - 2)
+			#print("row: ", row, " pool: ", pool, " ", line, " ", line.rfind(")") - line.rfind(")") - 2)
 			if pool.size() == 0:
 				row.type = "path" if row.name in ["custom_modules", "build_profile"] else "field"
 				row.default = default
@@ -267,7 +269,6 @@ func parsing_help(output:Array) -> Array:
 				row.type = "field"
 				row.default = default
 				row.value = pool
-			#print(row)
 				result.append(row)
 	return result
 
@@ -275,6 +276,11 @@ func parsing_help(output:Array) -> Array:
 func add_rows_to_ui(rows:Array) -> void:
 	for row in rows:
 		add_row_to_container(row, row_container)
+
+
+func _platform_selected(index: int) -> void:
+	print("_platform_selected: ", platform_option.get_item_text(index))
+	settings_config.set_value("parameters", "platform", platform_option.get_item_text(index))
 
 
 #func _on_ReadSconsHelp_pressed() -> void:

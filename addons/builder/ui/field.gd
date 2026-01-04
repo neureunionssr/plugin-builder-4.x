@@ -12,6 +12,7 @@ var value:String
 
 
 func _ready() -> void:
+	value_line.connect("text_changed", set_value)
 	value = default
 	value_line.text = value
 	name_label.text = String(name)
@@ -25,21 +26,20 @@ func _ready() -> void:
 	#emit_signal("_changed", name , changed)
 
 
-func _on_Reset_pressed() -> void:
+func row_reset() -> void:
 	value_line.text = default
 	value = default
 	changed = false
 	reset.visible = changed
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , null)
 
 
 func get_parameter() -> String:
 	return String(name) + "=" + value
 
 
-func _on_value_text_submitted(new_text: String) -> void:
-	print("changed")
+func set_value(new_text: String) -> void:
 	value = new_text
 	changed = new_text != default
 	reset.visible = changed
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , value if changed else null)

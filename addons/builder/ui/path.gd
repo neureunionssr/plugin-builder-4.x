@@ -11,7 +11,7 @@ var value:String = "":
 		value_line.text = value
 		changed = value != default
 		reset.visible = value != default
-		emit_signal("_changed", String(name) , changed)
+		emit_signal("_changed", String(name) , value if changed else null)
 
 @onready var name_label: Label = $HBoxContainer/Name
 @onready var reset: Button = $HBoxContainer/End/Reset
@@ -30,7 +30,7 @@ func _on_Reset_pressed() -> void:
 	value = default
 	reset.visible = false
 	changed = false
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , null)
 
 
 func set_value(_value:String)->void:
@@ -39,7 +39,7 @@ func set_value(_value:String)->void:
 	value_line.text = value
 	changed = _value != default
 	reset.visible = value != default
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , value if changed else null)
 
 
 func get_parameter() -> String:

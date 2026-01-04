@@ -22,7 +22,7 @@ func _on_Reset_pressed() -> void:
 	option.select(value)
 	reset.visible = false
 	changed = false
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name), null)
 
 
 func _on_Option_item_selected(index: int) -> void:
@@ -33,7 +33,7 @@ func _on_Option_item_selected(index: int) -> void:
 	else:
 		reset.visible = false
 		changed = false
-	emit_signal("_changed", String(name) , changed)
+	emit_signal("_changed", String(name) , value if changed else null)
 
 
 func get_parameter() -> String:
