@@ -61,11 +61,11 @@ func start_dialog() -> void:
 	var platforms = get_platforms(source_path)
 	if platforms.size() == 0: return
 	#add_row_to_container({"type":"list", "name":"platform", }, header_container)
-	print("platform: ", platforms[0])
+	#print("platform: ", platforms[0])
 	var attributes := get_scons_attribute_list(platforms[0])
-	print("attributes: ", attributes)
+	#print("attributes: ", attributes)
 	var parsed_array := parsing_help(attributes)
-	print("parsed_array: ", parsed_array)
+	#print("parsed_array: ", parsed_array)
 	if parsed_array.size() > 0:
 		add_rows_to_ui(parsed_array)
 	#if platforms.size() != 0:
@@ -214,19 +214,16 @@ func add_row_to_container(row:Dictionary, container:Control) -> void:
 
 
 func parsing_help(output:Array) -> Array:
-	var success:bool = false
 	var result:Array
 	for row in output:
 		if row.begins_with("scons: done reading SConscript files."):
-			success = true
-			break
-	if !success: return result
+			return []
 	var started:bool = false
 	var line:String
 	#print("output: ", output)
 	while output.size() > 0:
 		line = output.pop_front().strip_edges()
-		print("line: ", line)
+		#print("line: ", line)
 		if line.begins_with("platform:") and !started:
 			started = true
 			line = output.pop_front().strip_edges()
@@ -240,18 +237,19 @@ func parsing_help(output:Array) -> Array:
 			var default:String
 			#line = output.pop_front().strip_edges()
 			row.name = line.substr(0, line.find(":"))
-			row.description = line.substr(line.find(":") + 1, line.length() - line.rfind("(") + 1).strip_edges()
-			var spliter:String = "|" if row.description.find("|") > -1 else "/"
+			row.description = line.substr(line.find(":") + 1, line.find("(") - line.find(":") - 1).strip_edges()
+			var spliter:String = "|" if line.find("|") > -1 else "/"
 			var pool:PackedStringArray
-			if line.find("(") > -1: pool = line.substr(line.rfind("(") + 1, line.length() - line.rfind("(") - line.rfind(")") -1).split(spliter)
+			if line.find("(") > -1: pool = line.substr(line.rfind("(") + 1, line.rfind(")") - line.rfind("(") - 1).split(spliter)
 			while line.length() > 1:
 				line = output.pop_front().strip_edges()
-				print(line)
+				#print(line)
 				if line.begins_with("actual:"):
 					default = line.substr(line.find(":") + 1).strip_edges()
 					if default == "None": default = ""
+			print("row: ", row, " pool: ", pool, " ", line, " ", line.rfind(")") - line.rfind(")") - 2)
 			if pool.size() == 0:
-				row.type = "path" if row.name == "custom_modules" else "field"
+				row.type = "path" if row.name in ["custom_modules", "build_profile"] else "field"
 				row.default = default
 				result.append(row)
 			elif pool.has("yes"):
@@ -270,66 +268,7 @@ func parsing_help(output:Array) -> Array:
 				row.default = default
 				row.value = pool
 			#print(row)
-			result.append(row)
-	return result
-
-func old_parsing_help(output:PackedStringArray) -> Array:
-	var success:bool = true
-	var result:Array
-	
-	for row in output:
-		if row.find("scons: done reading SConscript files.") > -1:
-			success = false
-			break
-	if !success: return []
-	success = false
-	for row in output:
-		if row.find("platform:") > -1:
-			success = true
-			break
-		else:
-			output.remove_at(0)
-	for row in output:
-		if row.length() > 1:
-			output.remove_at(0)
-		else:
-			output.remove_at(0)
-			break
-	if !success: return []
-	for i in range(0, output.size() - 4, 4):
-		var row:Dictionary
-		var c:String = output[i]
-		row.name = c.substr(0, c.find(":")).strip_edges()
-		row.description = c.substr(c.find(":") + 1).strip_edges()
-		var start:int = c.rfind("(") + 1
-		if start == 0: 
-			row.type = "path" if row.name == "custom_modules" else "field"
-			row.default = output[i + 2].substr(output[i + 2].find(":") + 1).strip_edges()
-			result.append(row)
-			continue
-		var end:int = c.rfind(")")
-		var length:int = end - start
-		var description:String = c.substr(start, length)
-		var spliter:String = "|" if c.find("|") > -1 else "/"
-		var pool:PackedStringArray = description.split(spliter)
-		c = output[i + 2]
-		if pool.has("yes"):
-			row.type = "flag"
-			row.default = "yes" if c.find("True") > -1 else "no"
-			row.value = pool
-			result.append(row)
-			continue
-		if pool.size() > 1 :
-			row.type = "list"
-			row.default = c.substr(c.find(":") + 1).strip_edges()
-			if row.default.length() == 0: pool.append(row.default)
-			row.value = pool
-			result.append(row)
-			continue
-		row.type = "field"
-		row.default = c.substr(c.find(":") + 1).strip_edges()
-		result.append(row)
-	print(result)
+				result.append(row)
 	return result
 
 
