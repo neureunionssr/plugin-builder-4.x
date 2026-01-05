@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://barswm8g773e1"]
+[gd_scene load_steps=4 format=3 uid="uid://barswm8g773e1"]
 
 [ext_resource type="Script" uid="uid://bodutdf8drmhj" path="res://addons/builder/export_settings_dialog.gd" id="1"]
 [ext_resource type="StyleBox" uid="uid://dfwsp316jde50" path="res://addons/builder/ui/panel.stylebox" id="2_nngbh"]
+[ext_resource type="Texture2D" uid="uid://cldcac03oc2st" path="res://addons/builder/reset.png" id="3_nngbh"]
 
 [node name="Builder" type="MarginContainer"]
 anchors_preset = 15
@@ -45,44 +46,21 @@ text = "Add path to Godot Source"
 
 [node name="ButtonRow" type="HBoxContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 30
 alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="BuildTemplate" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+[node name="BuildTemplateButton" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
 layout_mode = 2
-size_flags_horizontal = 6
+size_flags_horizontal = 3
 disabled = true
-text = "Build template"
+text = "Build   "
 
-[node name="CopyCommands" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
+[node name="CopyAttributesButton" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
 layout_mode = 2
-size_flags_horizontal = 6
+size_flags_horizontal = 3
 disabled = true
-text = "Copy all commands"
-
-[node name="CopyPath" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 6
-text = "Copy export template path"
-
-[node name="SconsClean" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 6
-disabled = true
-text = "Clean Scons"
-
-[node name="ResetToDefaultButton" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 6
-disabled = true
-text = "Reset to default"
-
-[node name="AllReset" type="Button" parent="VBoxContainer/MarginContainer/HeaderContainer/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 6
-disabled = true
-text = "All reset"
+text = "Copy scons attributes"
 
 [node name="SourcePathRow" type="PanelContainer" parent="VBoxContainer/MarginContainer/HeaderContainer"]
 layout_mode = 2
@@ -135,6 +113,17 @@ size_flags_horizontal = 8
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
+[node name="AllResetButton" type="Button" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+icon = ExtResource("3_nngbh")
+flat = true
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
 [node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -169,3 +158,4 @@ text = "Path to template copied!"
 [connection signal="dir_selected" from="FileDialog" to="." method="_on_file_dialog_dir_selected"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer/Button" to="." method="_on_path_button_pressed" binds= ["VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow"]]
 [connection signal="item_selected" from="VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer/Option" to="." method="_platform_selected"]
+[connection signal="pressed" from="VBoxContainer/AllResetButton" to="." method="_on_all_reset_button_pressed"]

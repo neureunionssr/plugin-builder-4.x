@@ -8,7 +8,6 @@ var value:String = "":
 	set(_value):
 		value = _value
 		value_line.text = value
-		value_line.text = value
 		changed = value != default
 		reset.visible = value != default
 		emit_signal("_changed", String(name) , value if changed else null)
@@ -25,7 +24,7 @@ func _ready() -> void:
 	value = default
 
 
-func _on_Reset_pressed() -> void:
+func row_reset() -> void:
 	value_line.text = default
 	value = default
 	reset.visible = false
@@ -36,10 +35,10 @@ func _on_Reset_pressed() -> void:
 func set_value(_value:String)->void:
 	value = _value
 	value_line.text = value
-	value_line.text = value
 	changed = _value != default
-	reset.visible = value != default
-	emit_signal("_changed", String(name) , value if changed else null)
+	await get_tree().process_frame
+	reset.visible = changed
+	#emit_signal("_changed", String(name) , value if changed else null)
 
 
 func get_parameter() -> String:

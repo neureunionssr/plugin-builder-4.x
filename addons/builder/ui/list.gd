@@ -17,7 +17,7 @@ func _ready() -> void:
 	option.select(value)
 
 
-func _on_Reset_pressed() -> void:
+func row_reset() -> void:
 	value = default
 	option.select(value)
 	reset.visible = false
@@ -33,8 +33,17 @@ func _on_Option_item_selected(index: int) -> void:
 	else:
 		reset.visible = false
 		changed = false
-	emit_signal("_changed", String(name) , value if changed else null)
+	emit_signal("_changed", String(name) , option.get_item_text(value) if changed else null)
 
 
 func get_parameter() -> String:
 	return String(name) + "=" + option.get_item_text(option.selected)
+
+
+func set_value(_value:String)->void:
+	if _value == "":  return
+	value = int(_value)
+	option.select(value)
+	changed = value != default
+	await get_tree().process_frame
+	reset.visible = !changed

@@ -38,8 +38,15 @@ func get_parameter() -> String:
 	return String(name) + "=" + value
 
 
-func set_value(new_text: String) -> void:
+func set_new_value(new_text: String) -> void:
 	value = new_text
 	changed = new_text != default
 	reset.visible = changed
 	emit_signal("_changed", String(name) , value if changed else null)
+
+
+func set_value(new_text: String) -> void:
+	value = new_text
+	changed = new_text != default
+	await get_tree().process_frame
+	reset.visible = changed

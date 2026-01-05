@@ -15,15 +15,12 @@ var platforms:Array[String]
 @onready var file_dialog: FileDialog = $FileDialog
 
 
-@onready var build_template_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/BuildTemplate
-@onready var copy_commands_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/CopyCommands
-@onready var copy_path_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/CopyPath
-@onready var scons_clean_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/SconsClean
-@onready var reset_to_default_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/ResetToDefaultButton
-@onready var all_reset_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/AllReset
+@onready var build_template_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/BuildTemplateButton
+@onready var copy_attributes_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/ButtonRow/CopyAttributesButton
 @onready var path_value: LineEdit = $VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer/Value
 @onready var path_button: Button = $VBoxContainer/MarginContainer/HeaderContainer/SourcePathRow/HBoxContainer/Button
 @onready var platform_option: OptionButton = $VBoxContainer/MarginContainer/HeaderContainer/PlatformRoww/HBoxContainer/Option
+@onready var all_reset_button: Button = $VBoxContainer/AllResetButton
 
 
 var field_scene := preload("res://addons/builder/ui/field.scn")
@@ -48,7 +45,6 @@ func start_dialog() -> void:
 	if !settings_config.has_section_key("settings", "path"): return
 	source_path = settings_config.get_value("settings", "path")
 	if source_path == "": return
-	copy_path_button.disabled = false
 	if settings_config.has_section_key("settings", "platforms"): 
 		platforms = settings_config.get_value("settings", "platforms")
 	path_value.text = source_path
@@ -71,9 +67,17 @@ func start_dialog() -> void:
 	#print("parsed_array: ", parsed_array)
 	if parsed_array.size() > 0:
 		add_rows_to_ui(parsed_array)
+	else:
+		settings_config.clear()
+		print("Ошибка")
+		source_path = ""
+		path_value.text = source_path
+		settings_config.save(SETTINGS_CONFIG_PATH)
+		return
 	if platforms.size() != 0:
 		for p in platforms:
 			platform_option.add_item(p)
+		platform_option.select(platforms.find(settings_config.get_value("parameters", "platform")))
 		platform_option.disabled = false
 	
 	#if config.has_section("Parameters"):
@@ -136,8 +140,16 @@ func _on_file_dialog_dir_selected(dir: String) -> void:
 		"--directory":
 			var res:PackedStringArray = get_platforms(dir)
 			remove_rows_from_ui()
-			if res.size() == 0: return
-			path_value.text = dir
+			if res.size() == 0: 
+				source_path = ""
+				settings_config.clear()
+				settings_config.save(SETTINGS_CONFIG_PATH)
+				platform_option.clear()
+				path_value.text = ""
+				return
+			source_path = dir
+			path_value.text = source_path
+			settings_config.set_value("settings", "path", source_path)
 			clean_option(platform_option)
 			for p in res:
 				platform_option.add_item(p)
@@ -153,13 +165,13 @@ func _on_file_dialog_dir_selected(dir: String) -> void:
 			if rows_data.size() > 0:
 				add_rows_to_ui(rows_data)
 		_:
-			call_row.set_value(dir)
+			call_row.set_new_value(dir)
 
 
 func remove_rows_from_ui() -> void:
 	for row in row_container.get_children():
 		if row is BuildRow:
-			if is_connected("_changed", row_changed): row.disconnect("_changed", row_changed)
+			if row.is_connected("_changed", row_changed): row.disconnect("_changed", row_changed)
 		row_container.remove_child(row)
 		row.queue_free()
 
@@ -174,6 +186,7 @@ func row_changed(row_name:String, value)->void:
 	else:
 		print("new value")
 		if settings_config.load(SETTINGS_CONFIG_PATH) != OK: return
+		all_reset_button.visible = true
 		settings_config.set_value("parameters", row_name, value)
 		settings_config.save(SETTINGS_CONFIG_PATH)
 
@@ -186,12 +199,14 @@ func clean_option(opt:OptionButton) -> void:
 
 func add_row_to_container(row:Dictionary, container:Control) -> void:
 	var res:BuildRow
+	var value:String = settings_config.get_value("parameters", row.name, "")
 	match row.type:
 		"field":
 			res = field_scene.instantiate()
 			res.name = row.name
 			res.default = row.default
 			res.tooltip_text = row.description
+			if value: res.set_value(value)
 		"list":
 			res = list_scene.instantiate()
 			res.name = row.name
@@ -200,11 +215,13 @@ func add_row_to_container(row:Dictionary, container:Control) -> void:
 				opt.add_item(v)
 			res.tooltip_text = row.description
 			res.default = row.value.find(row.default)
+			if value: res.set_value(value)
 		"flag":
 			res = flag_scene.instantiate()
 			res.name = row.name
 			res.default = row.default
 			res.tooltip_text = row.description
+			if value: res.set_value(value)
 		"path":
 			res = path_scene.instantiate()
 			res.name = row.name
@@ -212,6 +229,7 @@ func add_row_to_container(row:Dictionary, container:Control) -> void:
 			res.tooltip_text = row.description
 			container.add_child(res)
 			res.button.pressed.connect(_on_path_button_pressed.bind([res.get_path()]))
+			if value: res.set_value(value)
 			return
 	container.add_child(res)
 	res.connect("_changed", row_changed)
@@ -280,7 +298,20 @@ func add_rows_to_ui(rows:Array) -> void:
 
 func _platform_selected(index: int) -> void:
 	print("_platform_selected: ", platform_option.get_item_text(index))
+	remove_rows_from_ui()
+	settings_config.erase_section("parameters")
 	settings_config.set_value("parameters", "platform", platform_option.get_item_text(index))
+	settings_config.save(SETTINGS_CONFIG_PATH)
+	var attributes := get_scons_attribute_list(settings_config.get_value("parameters", "platform"))
+	var parsed_array := parsing_help(attributes)
+	if parsed_array.size() > 0:
+		add_rows_to_ui(parsed_array)
+
+
+func _on_all_reset_button_pressed() -> void:
+	all_reset_button.visible = false
+	for row in row_container.get_children():
+		row.row_reset()
 
 
 #func _on_ReadSconsHelp_pressed() -> void:
